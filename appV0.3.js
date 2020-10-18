@@ -1,16 +1,19 @@
 let canvas = document.createElement("canvas");
 let ctx = canvas.getContext("2d");
-canvas.width = 960;
-canvas.height = 720;
+
+canvas.height = 800;
+canvas.width = 800;
 canvas.style = 'background:silver';
 document.body.appendChild(canvas);
 
-let strings = 10;
-let columns = 10;
+let mainIndex = 0;
+let strings = 40;
+let columns = 40;
 let x = 0;
 let y = 0;
-let size = 20;
-let step = 4;
+let step = 2;
+let sizeX = (canvas.width / columns)-step;
+let sizeY = (canvas.height / strings)-step;
 
 function rand(n) {   
     let rand = Math.random() * n;
@@ -18,11 +21,12 @@ function rand(n) {
   }
 
   class Cell {
-    constructor(index, x, y, size, step, color, right, bottom, visit){
+    constructor(index, x, y, sizeX, sizeY, step, color, right, bottom, visit){
         this.index = index;
         this.x = x;
         this.y = y;
-        this.size = size;
+        this.sizeX = sizeX;
+        this.sizeY = sizeY;
         this.step = step;
         this.color = color;
         this.right = right;
@@ -37,65 +41,98 @@ function rand(n) {
     }
     draw(){
         ctx.fillStyle = this.color;
-        ctx.fillRect(this.x, this.y, this.size, this.size);  
+        ctx.fillRect(this.x, this.y, this.sizeX, this.sizeY);  
         if (this.right == false){
-            ctx.fillRect(this.x + this.size , this.y, this.step , this.size);
+            ctx.fillRect(this.x + this.sizeX , this.y, this.step , this.sizeY);
         }  
         if (this.bottom == false){
-            ctx.fillRect(this.x, this.y + this.size , this.size, this.step );
-        }  
-        // if (this.visit == true){
-        //     ctx.fillStyle = 'green';
-        //     ctx.fillRect(this.x, this.y, this.size, this.size);  
-        // }          
+            ctx.fillRect(this.x, this.y + this.sizeY , this.sizeX, this.step );
+        } 
     }
 }
 
+// заполняем массив клетками
 cellsArr = [];
 for (let i = 0; i < strings; i++){
     for (let j = 0; j < columns; j++){
-        cellsArr.push(new Cell(i, (x+size+step)*j, (y+size+step)*i, size, step, 'olive', true, true, false))        
+        cellsArr.push(new Cell(i, (x+sizeX+step)*j, (y+sizeY+step)*i, sizeX, sizeY, step, 'olive', true, true, false))        
     }
-}
-// cellsArr[45].visit = true;
-for (let i = 0; i < cellsArr.length; i++){       
-    cellsArr[i].draw();   
 }
 
-for (let i = 0; i < cellsArr.length; i++){      
-    cellParametrs(i);
-}
-// начали писать главную функцию
-function worm(cellIndex){
-    if (rand(3) == 0 && cellsArr[cellIndex].neighbour.left == false){
-        cellsArr[cellIndex].visit = true;
-        cellsArr[cellIndex].neighbour.left = true;
-        cellsArr[cellIndex-1].right = false;
-        worm(cellIndex-1);        
+function mainDraw(){
+    if (mainIndex < 0){
+        console.log('всё');
+
+    }else{
+        let rnd = rand(4);
+        cellParametrs(mainIndex);        
+        worm(rnd);
+        for (let i = 0; i < cellsArr.length; i++){             
+            cellsArr[i].draw();             
+        }
     }
+}    
+
+    setInterval(mainDraw, 10);
+
+function worm(rnd){
+    cellsArr[mainIndex].visit = true;
+    cellsArr[mainIndex].color = 'black';    
+    
+    if (rnd == 0 && cellsArr[mainIndex].neighbour.left == false && cellsArr[mainIndex-1].visit == false){        
+        cellsArr[mainIndex].neighbour.left = true;   
+        cellsArr[mainIndex-1].visit = true;     
+        cellsArr[mainIndex-1].right = false;
+        cellsArr[mainIndex-1].oldIndex = mainIndex;
+        mainIndex -= 1;  
+        return;  
+    }
+    if (rnd == 2 && cellsArr[mainIndex].neighbour.right == false && cellsArr[mainIndex+1].visit == false){       
+        cellsArr[mainIndex].neighbour.right = true;
+        cellsArr[mainIndex+1].visit = true;
+        cellsArr[mainIndex].right = false;
+        cellsArr[mainIndex+1].oldIndex = mainIndex;
+        mainIndex += 1;
+        return;
+    }
+    if (rnd == 1 && cellsArr[mainIndex].neighbour.up == false && cellsArr[mainIndex - columns].visit == false){       
+        cellsArr[mainIndex].neighbour.up = true;
+        cellsArr[mainIndex - columns].visit = true;
+        cellsArr[mainIndex - columns].bottom = false;
+        cellsArr[mainIndex - columns].oldIndex = mainIndex;
+        mainIndex -= columns;  
+        return;
+    }
+    if (rnd == 3 && cellsArr[mainIndex].neighbour.down == false && cellsArr[mainIndex + columns].visit == false){       
+        cellsArr[mainIndex].neighbour.down = true;
+        cellsArr[mainIndex + columns].visit = true;
+        cellsArr[mainIndex].bottom = false;
+        cellsArr[mainIndex + columns].oldIndex = mainIndex;
+        mainIndex += columns; 
+        return;
+    }     
+    if(cellsArr[mainIndex].neighbour.left == true &&
+        cellsArr[mainIndex].neighbour.right == true &&
+        cellsArr[mainIndex].neighbour.up == true &&
+        cellsArr[mainIndex].neighbour.down == true){
+            console.log('ok');
+            mainIndex = cellsArr[mainIndex].oldIndex;
+    }
+    cellsArr[mainIndex].color = 'red';         
 }
 
 function cellParametrs(cellIndex){
     if (cellIndex/columns == Math.floor(cellIndex/columns) || cellsArr[cellIndex-1].visit == true){
-        cellsArr[cellIndex].color = 'red';
         cellsArr[cellIndex].neighbour.left = true;
-        cellsArr[cellIndex].draw();
     }
     if ((cellIndex+1)/columns == Math.floor((cellIndex+1)/columns) || cellsArr[cellIndex+1].visit == true){
-        cellsArr[cellIndex].color = 'green';
         cellsArr[cellIndex].neighbour.right = true;
-        cellsArr[cellIndex].draw();  
     }
     if (cellIndex < columns || cellsArr[cellIndex-columns].visit == true){
-        cellsArr[cellIndex].color = 'purple';
         cellsArr[cellIndex].neighbour.up = true;
-        cellsArr[cellIndex].draw();     
     }  
     if (cellIndex + 1 > (columns * strings) - columns || cellsArr[cellIndex+columns].visit == true){
-        cellsArr[cellIndex].color = 'yellow';
         cellsArr[cellIndex].neighbour.down = true;
-        cellsArr[cellIndex].draw();  
     } 
-    // if (cellsArr[cellIndex-1].visit == true)
 }
 
