@@ -14,6 +14,7 @@ let y = 0;
 let step = 2;
 let sizeX = (canvas.width / columns)-step;
 let sizeY = (canvas.height / strings)-step;
+let stepsNumber = 0;
 
 function rand(n) {   
     let rand = Math.random() * n;
@@ -61,7 +62,7 @@ for (let i = 0; i < strings; i++){
 
 function mainDraw(){
     if (mainIndex < 0){
-        console.log('всё');
+        console.log('всё', stepsNumber);
 
     }else{
         let rnd = rand(4);
@@ -70,10 +71,11 @@ function mainDraw(){
         for (let i = 0; i < cellsArr.length; i++){             
             cellsArr[i].draw();             
         }
+        stepsNumber++;
     }
 }    
 
-    setInterval(mainDraw, 10);
+    setInterval(mainDraw, 1);
 
 function worm(rnd){
     cellsArr[mainIndex].visit = true;
